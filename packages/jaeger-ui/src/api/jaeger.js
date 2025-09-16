@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+/* global __JAEGER_API_AUTHORIZATION__ */
 import fetch from 'isomorphic-fetch';
 import dayjs from 'dayjs';
 import _duration from 'dayjs/plugin/duration';
@@ -21,6 +21,12 @@ import getConfig from '../utils/config/get-config';
 import prefixUrl from '../utils/prefix-url';
 
 dayjs.extend(_duration);
+
+// Allow deployments (e.g., GreptimeDB) to inject a shared Authorization header without touching callers.
+const DEFAULT_AUTH_HEADER =
+  typeof __JAEGER_API_AUTHORIZATION__ !== 'undefined' && __JAEGER_API_AUTHORIZATION__
+    ? __JAEGER_API_AUTHORIZATION__
+    : '';
 
 // export for tests
 export function getMessageFromError(errData, status) {
@@ -40,6 +46,28 @@ export function getMessageFromError(errData, status) {
 function getJSON(url, options = {}) {
   const { query = null, ...init } = options;
   init.credentials = 'same-origin';
+  if (DEFAULT_AUTH_HEADER) {
+    if (typeof Headers !== 'undefined') {
+      const headers = new Headers(init.headers ?? undefined);
+      if (!headers.has('Authorization')) {
+        headers.set('Authorization', DEFAULT_AUTH_HEADER);
+      }
+      init.headers = headers;
+    } else {
+      const providedHeaders = init.headers ?? {};
+      const hasAuth = Array.isArray(providedHeaders)
+        ? providedHeaders.some(([key]) => key && key.toLowerCase() === 'authorization')
+        : Object.keys(providedHeaders).some(key => key.toLowerCase() === 'authorization');
+      if (!hasAuth) {
+        if (Array.isArray(providedHeaders)) {
+          providedHeaders.push(['Authorization', DEFAULT_AUTH_HEADER]);
+          init.headers = providedHeaders;
+        } else {
+          init.headers = { ...providedHeaders, Authorization: DEFAULT_AUTH_HEADER };
+        }
+      }
+    }
+  }
   let queryStr = '';
 
   if (query) {

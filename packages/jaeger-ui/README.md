@@ -13,3 +13,13 @@ When the config file has `.json` extension, `query-service` looks for the statem
 ### Configuration as Javascript
 
 When the config file has `.js` extension, `query-service` looks for the comment `// JAEGER_CONFIG_JS` and replaces it with a function `UIConfig()` whose body is the content of the loaded file, which must contain a valid Javascript code that returns a Config object. This allows more complex integrations by actually executing some custom code. For example, `tracking.customWebAnalytics` allows to hook up a different implementation of the tracking component.
+
+### Injecting an Authorization header
+
+When proxying Jaeger traffic through services that require HTTP authentication (for example, GreptimeDB), set the environment variable `VITE_JAEGER_API_AUTHORIZATION` before running the dev server or building the UI:
+
+```
+VITE_JAEGER_API_AUTHORIZATION="Basic <base64-credentials>" npm run start
+```
+
+If defined, this header is added to every API request issued by the UI as well as to the Vite dev proxy.

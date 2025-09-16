@@ -20,12 +20,15 @@ import vitePluginImp from 'vite-plugin-imp';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
+const authorizationHeader = process.env.VITE_JAEGER_API_AUTHORIZATION?.trim() || '';
+
 const proxyConfig = {
   target: 'http://localhost:16686',
   secure: false,
   changeOrigin: true,
   ws: true,
   xfwd: true,
+  headers: authorizationHeader ? { Authorization: authorizationHeader } : undefined,
 };
 
 // https://vitejs.dev/config/
@@ -34,6 +37,7 @@ export default defineConfig({
     __REACT_APP_GA_DEBUG__: JSON.stringify(process.env.REACT_APP_GA_DEBUG || ''),
     __REACT_APP_VSN_STATE__: JSON.stringify(process.env.REACT_APP_VSN_STATE || ''),
     __APP_ENVIRONMENT__: JSON.stringify(process.env.NODE_ENV || 'development'),
+    __JAEGER_API_AUTHORIZATION__: JSON.stringify(authorizationHeader),
   },
   plugins: [
     react({
