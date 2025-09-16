@@ -16,10 +16,18 @@ When the config file has `.js` extension, `query-service` looks for the comment 
 
 ### Injecting an Authorization header
 
-When proxying Jaeger traffic through services that require HTTP authentication (for example, GreptimeDB), set the environment variable `VITE_JAEGER_API_AUTHORIZATION` before running the dev server or building the UI:
+When proxying Jaeger traffic through services that require HTTP authentication (for example, GreptimeDB), set the environment variable `VITE_JAEGER_API_AUTHORIZATION` before running the dev server or building the UI. This value is forwarded as both the standard `Authorization` header and GreptimeDB's `x-greptime-auth` header.
 
 ```
 VITE_JAEGER_API_AUTHORIZATION="Basic <base64-credentials>" npm run start
 ```
 
 If defined, this header is added to every API request issued by the UI as well as to the Vite dev proxy.
+
+You can also override the proxy target (defaults to `http://localhost:16686`) by exporting `VITE_JAEGER_PROXY_TARGET`:
+
+```
+VITE_JAEGER_API_AUTHORIZATION="Basic <base64-credentials>" \
+VITE_JAEGER_PROXY_TARGET="http://localhost:4000/v1/jaeger" \
+npm run start
+```

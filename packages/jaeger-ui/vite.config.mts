@@ -21,14 +21,17 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
 const authorizationHeader = process.env.VITE_JAEGER_API_AUTHORIZATION?.trim() || '';
+const proxyTarget = process.env.VITE_JAEGER_PROXY_TARGET?.trim() || 'http://localhost:16686';
 
 const proxyConfig = {
-  target: 'http://localhost:16686',
+  target: proxyTarget,
   secure: false,
   changeOrigin: true,
   ws: true,
   xfwd: true,
-  headers: authorizationHeader ? { Authorization: authorizationHeader } : undefined,
+  headers: authorizationHeader
+    ? { Authorization: authorizationHeader, 'x-greptime-auth': authorizationHeader }
+    : undefined,
 };
 
 // https://vitejs.dev/config/

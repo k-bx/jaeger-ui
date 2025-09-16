@@ -52,20 +52,31 @@ function getJSON(url, options = {}) {
       if (!headers.has('Authorization')) {
         headers.set('Authorization', DEFAULT_AUTH_HEADER);
       }
+      if (!headers.has('x-greptime-auth')) {
+        headers.set('x-greptime-auth', DEFAULT_AUTH_HEADER);
+      }
       init.headers = headers;
+    } else if (Array.isArray(init.headers)) {
+      const lowerCase = init.headers.map(([key]) => (key ? key.toLowerCase() : ''));
+      const next = [...init.headers];
+      if (!lowerCase.includes('authorization')) {
+        next.push(['Authorization', DEFAULT_AUTH_HEADER]);
+      }
+      if (!lowerCase.includes('x-greptime-auth')) {
+        next.push(['x-greptime-auth', DEFAULT_AUTH_HEADER]);
+      }
+      init.headers = next;
     } else {
       const providedHeaders = init.headers ?? {};
-      const hasAuth = Array.isArray(providedHeaders)
-        ? providedHeaders.some(([key]) => key && key.toLowerCase() === 'authorization')
-        : Object.keys(providedHeaders).some(key => key.toLowerCase() === 'authorization');
-      if (!hasAuth) {
-        if (Array.isArray(providedHeaders)) {
-          providedHeaders.push(['Authorization', DEFAULT_AUTH_HEADER]);
-          init.headers = providedHeaders;
-        } else {
-          init.headers = { ...providedHeaders, Authorization: DEFAULT_AUTH_HEADER };
-        }
+      const lowerCaseKeys = Object.keys(providedHeaders).map(key => key.toLowerCase());
+      const next = { ...providedHeaders };
+      if (!lowerCaseKeys.includes('authorization')) {
+        next.Authorization = DEFAULT_AUTH_HEADER;
       }
+      if (!lowerCaseKeys.includes('x-greptime-auth')) {
+        next['x-greptime-auth'] = DEFAULT_AUTH_HEADER;
+      }
+      init.headers = next;
     }
   }
   let queryStr = '';
